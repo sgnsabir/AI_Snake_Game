@@ -35,29 +35,33 @@ class QTrainer:
         next_state = torch.tensor(next_state, dtype=torch.float)
         action = torch.tensor(action, dtype=torch.long)
         reward = torch.tensor(reward, dtype=torch.float)
-        # (n, x)
+        done = torch.tensor(done, dtype=torch.bool)
 
         if len(state.shape) == 1:
-            # (1, x)
+            # If the input is a single sample, we need to add a batch dimension
             state = torch.unsqueeze(state, 0)
             next_state = torch.unsqueeze(next_state, 0)
             action = torch.unsqueeze(action, 0)
             reward = torch.unsqueeze(reward, 0)
-            done = (done, )
+            done = torch.unsqueeze(done, 0)
 
-        # 1: predicted Q values with current state
+        # 1. Predicted Q values for the current state
         pred = self.model(state)
 
+        # 2. Target Q values
         target = pred.clone()
         for idx in range(len(done)):
             Q_new = reward[idx]
             if not done[idx]:
                 Q_new = reward[idx] + self.gamma * torch.max(self.model(next_state[idx]))
 
-            target[idx][torch.argmax(action).item()]
-        # 2: Q_new = r + y * max(next_predicted Q value) -> Only do this if not done
-        # pred.clone()
-        # preds[argmax(action)] =  Q_new
+            # Assuming action is one-hot encoded, get the index of the action taken
+            action_idx = torch.argmax(action[idx]).item()
+            
+            # Update the Q-value for the specific action
+            target[idx][action_idx] = Q_new
+
+        # 3. Backpropagation
         self.optimizer.zero_grad()
         loss = self.criterian(target, pred)
         loss.backward()

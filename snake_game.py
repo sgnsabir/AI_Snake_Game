@@ -93,13 +93,9 @@ class SnakeGame:
                     self.direction = Direction.DOWN
 
     def _is_collision(self):
-        # Check if snake hits boundaries
-        if not (0 <= self.head.x < self.w and 0 <= self.head.y < self.h):
-            return True
         # Check if snake hits itself
         if self.head in self.snake[1:]:
             return True
-
         return False
 
     def _update_ui(self):
@@ -125,6 +121,16 @@ class SnakeGame:
             y += BLOCK_SIZE
         elif direction == Direction.UP:
             y -= BLOCK_SIZE
+
+        # Handle wrapping around the screen
+        if x >= self.w:
+            x = 0
+        elif x < 0:
+            x = self.w - BLOCK_SIZE
+        if y >= self.h:
+            y = 0
+        elif y < 0:
+            y = self.h - BLOCK_SIZE
 
         self.head = Point(x, y)
 

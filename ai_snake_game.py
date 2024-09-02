@@ -13,7 +13,6 @@ font = pygame.font.Font('arial.ttf', 25)
 # game_iteration
 # is_collision
 
-
 class Direction(Enum):
     RIGHT = 1
     LEFT = 2
@@ -30,7 +29,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0, 0, 0)
 
 BLOCK_SIZE = 20
-SPEED = 50
+SPEED = 40
 
 class SnakeGameAI:
     def __init__(self, w=640, h=480):
@@ -42,8 +41,6 @@ class SnakeGameAI:
         self.clock = pygame.time.Clock()
         self.reset()
 
-        
-    
     def reset(self):
         # init game state
         self.direction = Direction.RIGHT
@@ -96,14 +93,10 @@ class SnakeGameAI:
         self.clock.tick(SPEED)
         # 6. return game over and score
         return reward, False, self.score
-        
 
     def is_collision(self, pt=None):
         if pt is None:
             pt = self.head
-        # Check if snake hits boundaries
-        if not (0 <= pt.x < self.w and 0 <= pt.y < self.h):
-            return True
         # Check if snake hits itself
         if pt in self.snake[1:]:
             return True
@@ -129,13 +122,13 @@ class SnakeGameAI:
         idx = clock_wise.index(self.direction)
 
         if np.array_equal(action, [1, 0, 0]):
-            new_dir = clock_wise[idx] # no change
+            new_dir = clock_wise[idx]  # no change
         elif np.array_equal(action, [0, 1, 0]):
             next_idx = (idx + 1) % 4
-            new_dir = clock_wise[next_idx] # right turn r -> d -> l -> u
-        else: # [0, 0, 1]
+            new_dir = clock_wise[next_idx]  # right turn r -> d -> l -> u
+        else:  # [0, 0, 1]
             next_idx = (idx - 1) % 4
-            new_dir = clock_wise[next_idx] # left turn r -> u -> l -> d 
+            new_dir = clock_wise[next_idx]  # left turn r -> u -> l -> d
         self.direction = new_dir
 
         x, y = self.head
@@ -147,5 +140,15 @@ class SnakeGameAI:
             y += BLOCK_SIZE
         elif self.direction == Direction.UP:
             y -= BLOCK_SIZE
+
+        # Handle wrapping around the screen
+        if x >= self.w:
+            x = 0
+        elif x < 0:
+            x = self.w - BLOCK_SIZE
+        if y >= self.h:
+            y = 0
+        elif y < 0:
+            y = self.h - BLOCK_SIZE
 
         self.head = Point(x, y)
